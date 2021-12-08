@@ -2,8 +2,12 @@
 require 'spec_helper'
 
 RSpec.describe 'Shadow DOM' do
-  context 'when Chrome 95' do
-    it "old way works" do
+  after { @driver.quit }
+
+  context 'when old Chrome' do
+    #  What most people use for Shadow DOM Elements;
+    #  Still works for Chrome < v96, Edge < v96, Safari
+    it "old code works" do
       user = ENV['SAUCE_USERNAME']
       key = ENV['SAUCE_ACCESS_KEY']
 
@@ -15,6 +19,7 @@ RSpec.describe 'Shadow DOM' do
                                         url: 'https://ondemand.saucelabs.com/wd/hub/',
                                         capabilities: opts
       @driver.get('http://watir.com/examples/shadow_dom.html')
+
       shadow_host = @driver.find_element(css: '#shadow_host')
       shadow_root = @driver.execute_script('return arguments[0].shadowRoot', shadow_host)
       shadow_content = shadow_root.find_element(css: '#shadow_content')
@@ -23,26 +28,28 @@ RSpec.describe 'Shadow DOM' do
     end
   end
 
-  context 'when Chrome 96' do
-    it 'old way still works' do
-      driver = Selenium::WebDriver.for :chrome
+  context 'when new Chrome' do
+    # Same code as above, but with Chromium 96+, it works in Selenium 4.1 (but not 4.0)
+    it 'old code works' do
+      @driver = Selenium::WebDriver.for :chrome
 
-      driver.get('http://watir.com/examples/shadow_dom.html')
-      shadow_host = driver.find_element(css: '#shadow_host')
-      shadow_root = driver.execute_script('return arguments[0].shadowRoot', shadow_host)
+      @driver.get('http://watir.com/examples/shadow_dom.html')
 
+      shadow_host = @driver.find_element(css: '#shadow_host')
+      shadow_root = @driver.execute_script('return arguments[0].shadowRoot', shadow_host)
       shadow_content = shadow_root.find_element(css: '#shadow_content')
 
       expect(shadow_content.text).to eq 'some text'
     end
 
+    # Please use this code
     it 'recommended code' do
-      driver = Selenium::WebDriver.for :chrome
+      @driver = Selenium::WebDriver.for :chrome
 
-      driver.get('http://watir.com/examples/shadow_dom.html')
-      shadow_host = driver.find_element(css: '#shadow_host')
+      @driver.get('http://watir.com/examples/shadow_dom.html')
+
+      shadow_host = @driver.find_element(css: '#shadow_host')
       shadow_root = shadow_host.shadow_root
-
       shadow_content = shadow_root.find_element(css: '#shadow_content')
 
       expect(shadow_content.text).to eq 'some text'
@@ -50,12 +57,14 @@ RSpec.describe 'Shadow DOM' do
   end
 
   context 'when Firefox' do
-    it 'uses children' do
-      driver = Selenium::WebDriver.for :firefox
+    # Firefox is special
+    it 'workaround' do
+      @driver = Selenium::WebDriver.for :firefox
 
-      driver.get('http://watir.com/examples/shadow_dom.html')
-      shadow_host = driver.find_element(css: '#shadow_host')
-      children = driver.execute_script('return arguments[0].shadowRoot.children', shadow_host)
+      @driver.get('http://watir.com/examples/shadow_dom.html')
+
+      shadow_host = @driver.find_element(css: '#shadow_host')
+      children = @driver.execute_script('return arguments[0].shadowRoot.children', shadow_host)
 
       shadow_content = children.first { |child| child.attribute('id') == 'shadow_content' }
 
